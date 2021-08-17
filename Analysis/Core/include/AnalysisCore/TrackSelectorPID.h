@@ -410,7 +410,7 @@ class TrackSelectorPID
   {
     int statusTPC = getStatusTrackPIDTPC(track);
     int statusTOF = getStatusTrackPIDTOF(track);
-
+   
     if (statusTPC == Status::PIDAccepted || statusTOF == Status::PIDAccepted) {
       return Status::PIDAccepted; // what if we have Accepted for one and Rejected for the other?
     }
@@ -476,7 +476,75 @@ class TrackSelectorPID
 
     return isSelRICH || isSelTOF;
   }
+  ////////////////////////track is pion not kaon/////////////////////
+  template <typename T>
+  bool isPionAndNotKaon(const T& track, bool useTOF = true, bool useRICH = true)
+  {
+    bool isSelTOF = false;
+    bool isSelRICH = false;
+    bool hasRICH = track.richId() > -1;
+    bool hasTOF = isValidTrackPIDTOF(track);
+    auto nSigmaTOFPi = track.tofNSigmaPi();
+    auto nSigmaTOFKa = track.tofNSigmaKa();
+    auto nSigmaRICHPi = hasRICH ? track.rich().richNsigmaPi() : -1000.;
+    auto nSigmaRICHKa = hasRICH ? track.rich().richNsigmaKa() : -1000.;
+    auto p = track.p();
 
+    // TOF                                                                                                                                                                                                  
+    if (useTOF && hasTOF && (p < 0.6))
+      {
+      if (p > 0.4 && hasRICH)
+	{
+        if ((std::abs(nSigmaTOFPi) < mNSigmaTOFMax) && (std::abs(nSigmaRICHPi) < mNSigmaRICHMax))
+	  {
+          isSelTOF = true; // is selected as pionn by TOF and RICH                                                                                                                                       
+	  }
+	}
+      else if (p <= 0.4)
+	{
+	  if (std::abs(nSigmaTOFPi) < mNSigmaTOFMax)
+	    {
+	      isSelTOF = true; // is selected as Pion by TOF
+	    }
+	}
+      else
+	{
+	  isSelTOF = false; // This is rejecting all the heavier particles which do not have a RICH signal in the p area of 0.4-0.6 GeV/c
+	}
+      
+      if (std::abs(nSigmaTOFKa) < mNSigmaTOFMax)
+	{
+	  isSelTOF = false; // is selected as kaon by TOF
+	}	
+      }
+    else
+      {
+      isSelTOF = false;
+      }
+
+    // RICH                                                                                                                                                                                                 
+    if (useRICH && hasRICH)
+      {
+	if (std::abs(nSigmaRICHPi) < mNSigmaRICHMax)
+	  {
+	    isSelRICH = true; // is selected as electron by RICH
+	  }
+	if ((std::abs(nSigmaRICHKa) < mNSigmaRICHMax) && (p > 1.0) && (p < 2.0))
+	  {
+	    isSelRICH = false; // is selected as pion by RICH
+	  }
+      }
+    else
+      {
+	isSelRICH = false;
+      }
+
+    return isSelRICH || isSelTOF;
+  }
+
+
+
+  
  private:
   uint mPdg = kPiPlus; ///< PDG code of the expected particle
 

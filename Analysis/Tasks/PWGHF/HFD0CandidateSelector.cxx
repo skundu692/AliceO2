@@ -20,11 +20,40 @@
 #include "AnalysisDataModel/HFSecondaryVertex.h"
 #include "AnalysisDataModel/HFCandidateSelectionTables.h"
 #include "AnalysisCore/TrackSelectorPID.h"
+#include "ALICE3Analysis/RICH.h"
+#include "Framework/runDataProcessing.h"
 
 using namespace o2;
 using namespace o2::framework;
 using namespace o2::aod::hf_cand_prong2;
 using namespace o2::analysis::hf_cuts_d0_topik;
+
+
+
+
+namespace o2::aod
+{
+namespace hf_track_index_alice3_pid
+{
+DECLARE_SOA_INDEX_COLUMN(Track, track); //!
+DECLARE_SOA_INDEX_COLUMN(RICH, rich);
+} // namespace hf_track_index_alice3_pid
+
+  DECLARE_SOA_INDEX_TABLE_USER(HfTrackIndexALICE3PID, Tracks, "HFTRKIDXA3PID",//!
+                             hf_track_index_alice3_pid::TrackId,
+                             hf_track_index_alice3_pid::RICHId);
+} // namespace o2::aod
+
+struct Alice3PidIndexBuilder {
+  Builds<o2::aod::HfTrackIndexALICE3PID> index;
+  void init(o2::framework::InitContext&) {}
+};
+
+
+
+
+
+
 
 /// Struct for applying D0 selection cuts
 struct HFD0CandidateSelector {
@@ -43,6 +72,13 @@ struct HFD0CandidateSelector {
   Configurable<double> d_pidTOFMaxpT{"d_pidTOFMaxpT", 5., "Upper bound of track pT for TOF PID"};
   Configurable<double> d_nSigmaTOF{"d_nSigmaTOF", 3., "Nsigma cut on TOF only"};
   Configurable<double> d_nSigmaTOFCombined{"d_nSigmaTOFCombined", 5., "Nsigma cut on TOF combined with TPC"};
+  //////////////////new//////////////////////////
+  // RICH
+  Configurable<double> d_pidRICHMinpT{"d_pidRICHMinpT", 0.15, "Lower bound of track pT for RICH PID"};
+  Configurable<double> d_pidRICHMaxpT{"d_pidRICHMaxpT", 10., "Upper bound of track pT for RICH PID"};
+  Configurable<double> d_nSigmaRICH{"d_nSigmaRICH", 3., "Nsigma cut on RICH only"};
+  Configurable<double> d_nSigmaRICHCombinedTOF{"d_nSigmaRICHCombinedTOF", 5., "Nsigma cut on RICH combined with TOF"};
+  //////////////////////
   // topological cuts
   Configurable<std::vector<double>> pTBins{"pTBins", std::vector<double>{hf_cuts_d0_topik::pTBins_v}, "pT bin limits"};
   Configurable<LabeledArray<double>> cuts{"D0_to_pi_K_cuts", {hf_cuts_d0_topik::cuts[0], npTBins, nCutVars, pTBinLabels, cutVarLabels}, "D0 candidate selection per pT bin"};
@@ -65,6 +101,7 @@ struct HFD0CandidateSelector {
   /// Conjugate-independent topological cuts
   /// \param candidate is candidate
   /// \return true if candidate passes all cuts
+
   template <typename T>
   bool selectionTopol(const T& candidate)
   {
@@ -118,6 +155,7 @@ struct HFD0CandidateSelector {
   /// \param trackKaon is the track with the kaon hypothesis
   /// \note trackPion = positive and trackKaon = negative for D0 selection and inverse for D0bar
   /// \return true if candidate passes all cuts for the given Conjugate
+
   template <typename T1, typename T2>
   bool selectionTopolConjugate(const T1& candidate, const T2& trackPion, const T2& trackKaon)
   {
@@ -162,108 +200,113 @@ struct HFD0CandidateSelector {
     return true;
   }
 
-  void process(aod::HfCandProng2 const& candidates, aod::BigTracksPID const&)
+  
+  using TracksPID = soa::Join<aod::BigTracksPID, aod::HfTrackIndexALICE3PID>;
+  void process(aod::HfCandProng2 const& candidates, TracksPID const&, aod::RICHs const&)
   {
     TrackSelectorPID selectorPion(kPiPlus);
     selectorPion.setRangePtTPC(d_pidTPCMinpT, d_pidTPCMaxpT);
-    selectorPion.setRangeNSigmaTPC(-d_nSigmaTPC, d_nSigmaTPC);
-    selectorPion.setRangeNSigmaTPCCondTOF(-d_nSigmaTPCCombined, d_nSigmaTPCCombined);
     selectorPion.setRangePtTOF(d_pidTOFMinpT, d_pidTOFMaxpT);
+    selectorPion.setRangePtRICH(d_pidRICHMinpT, d_pidRICHMaxpT);
+    
+    selectorPion.setRangeNSigmaTPC(-d_nSigmaTPC, d_nSigmaTPC);
     selectorPion.setRangeNSigmaTOF(-d_nSigmaTOF, d_nSigmaTOF);
+    selectorPion.setRangeNSigmaRICH(-d_nSigmaRICH, d_nSigmaRICH);
+    
     selectorPion.setRangeNSigmaTOFCondTPC(-d_nSigmaTOFCombined, d_nSigmaTOFCombined);
-
+    selectorPion.setRangeNSigmaRICHCondTOF(-d_nSigmaRICHCombinedTOF, d_nSigmaRICHCombinedTOF);
+    
     TrackSelectorPID selectorKaon(selectorPion);
-    selectorKaon.setPDG(kKPlus);
-
+    
+    
     // looping over 2-prong candidates
-    for (auto& candidate : candidates) {
+    for (auto& candidate : candidates)
+      {
+	int statusD0 = 0;
+	int statusD0bar = 0;
 
-      // final selection flag: 0 - rejected, 1 - accepted
-      int statusD0 = 0;
-      int statusD0bar = 0;
+	if (!(candidate.hfflag() & 1 << DecayType::D0ToPiK))
+	  {
+	    hfSelD0Candidate(statusD0, statusD0bar);
+	    continue;
+	  }
+	
+	auto trackPos = candidate.index0_as<TracksPID>(); // positive daughter
+	auto trackNeg = candidate.index1_as<TracksPID>(); // negative daughter
 
-      if (!(candidate.hfflag() & 1 << DecayType::D0ToPiK)) {
-        hfSelD0Candidate(statusD0, statusD0bar);
-        continue;
-      }
-
-      auto trackPos = candidate.index0_as<aod::BigTracksPID>(); // positive daughter
-      auto trackNeg = candidate.index1_as<aod::BigTracksPID>(); // negative daughter
-
-      /*
-      if (!daughterSelection(trackPos) || !daughterSelection(trackNeg)) {
-        hfSelD0Candidate(statusD0, statusD0bar);
-        continue;
-      }
-      */
-
-      // conjugate-independent topological selection
-      if (!selectionTopol(candidate)) {
-        hfSelD0Candidate(statusD0, statusD0bar);
-        continue;
-      }
-
-      // implement filter bit 4 cut - should be done before this task at the track selection level
-      // need to add special cuts (additional cuts on decay length and d0 norm)
-
+	// conjugate-independent topological selection
+	if (!selectionTopol(candidate))
+	  {
+	    hfSelD0Candidate(statusD0, statusD0bar);
+	    continue;
+	}
+	
       // conjugate-dependent topological selection for D0
-      bool topolD0 = selectionTopolConjugate(candidate, trackPos, trackNeg);
-      // conjugate-dependent topological selection for D0bar
-      bool topolD0bar = selectionTopolConjugate(candidate, trackNeg, trackPos);
+	bool topolD0 = selectionTopolConjugate(candidate, trackPos, trackNeg);
+	bool topolD0bar = selectionTopolConjugate(candidate, trackNeg, trackPos);
+	
+	if (!topolD0 && !topolD0bar)
+	  {
+	    hfSelD0Candidate(statusD0, statusD0bar);
+	    continue;
+	  }
 
-      if (!topolD0 && !topolD0bar) {
-        hfSelD0Candidate(statusD0, statusD0bar);
-        continue;
-      }
+  
 
-      // track-level PID selection
-      int pidTrackPosKaon = selectorKaon.getStatusTrackPIDAll(trackPos);
-      int pidTrackPosPion = selectorPion.getStatusTrackPIDAll(trackPos);
-      int pidTrackNegKaon = selectorKaon.getStatusTrackPIDAll(trackNeg);
-      int pidTrackNegPion = selectorPion.getStatusTrackPIDAll(trackNeg);
+	//////////////////////TrackID checking////////////////////////
+	////////step1: check track is pion not electron//////////////////////////
+	if (selectorPion.isElectronAndNotPion(trackPos) || selectorPion.isElectronAndNotPion(trackNeg))
+	{
+	  hfSelD0Candidate(statusD0, statusD0bar);
+	  continue;
+	}
 
-      int pidD0 = -1;
-      int pidD0bar = -1;
+	////////step2: pion kaon selection and D0 selection//////////////////////////
+	// track-level TOF PID selection
+	int pidTrackPosKaonTOF = selectorKaon.getStatusTrackPIDTOF(trackPos);
+	int pidTrackPosPionTOF = selectorPion.getStatusTrackPIDTOF(trackPos);
+	int pidTrackNegKaonTOF = selectorKaon.getStatusTrackPIDTOF(trackNeg);
+	int pidTrackNegPionTOF = selectorPion.getStatusTrackPIDTOF(trackNeg);
+	
+	// track-level RICH PID selection
+	int pidTrackPosKaonRICH = selectorKaon.getStatusTrackPIDRICH(trackPos);
+	int pidTrackPosPionRICH = selectorPion.getStatusTrackPIDRICH(trackPos);
+	int pidTrackNegKaonRICH = selectorKaon.getStatusTrackPIDRICH(trackNeg);
+	int pidTrackNegPionRICH = selectorPion.getStatusTrackPIDRICH(trackNeg);
+	bool ispositivepionnotkaon=selectorKaon.isPionAndNotKaon(trackPos);
+	bool isnegativepionnotkaon=selectorKaon.isPionAndNotKaon(trackNeg);
+      
+	int pidD0 = -1;
+	int pidD0bar = -1;
 
-      if (pidTrackPosPion == TrackSelectorPID::Status::PIDAccepted &&
-          pidTrackNegKaon == TrackSelectorPID::Status::PIDAccepted) {
-        pidD0 = 1; // accept D0
-      } else if (pidTrackPosPion == TrackSelectorPID::Status::PIDRejected ||
-                 pidTrackNegKaon == TrackSelectorPID::Status::PIDRejected ||
-                 pidTrackNegPion == TrackSelectorPID::Status::PIDAccepted ||
-                 pidTrackPosKaon == TrackSelectorPID::Status::PIDAccepted) {
-        pidD0 = 0; // exclude D0
-      }
+	///////////check positive track pion not kaon as well as negetive track kaon//////////////////////
+	if ((pidTrackPosPionTOF == TrackSelectorPID::Status::PIDAccepted && pidTrackNegKaonTOF == TrackSelectorPID::Status::PIDAccepted && ispositivepionnotkaon && (!isnegativepionnotkaon))||(pidTrackPosPionRICH == TrackSelectorPID::Status::PIDAccepted && pidTrackNegKaonRICH == TrackSelectorPID::Status::PIDAccepted && ispositivepionnotkaon && (!isnegativepionnotkaon)))
+	  {
+	    pidD0 = 1; // accept D0
+	  }
+	///////////check negative track pion not kaon as well as positive track kaon//////////////////////
+	if ((pidTrackNegPionTOF == TrackSelectorPID::Status::PIDAccepted && pidTrackPosKaonTOF == TrackSelectorPID::Status::PIDAccepted && isnegativepionnotkaon && (!ispositivepionnotkaon))||(pidTrackNegPionRICH == TrackSelectorPID::Status::PIDAccepted && pidTrackPosKaonRICH == TrackSelectorPID::Status::PIDAccepted && isnegativepionnotkaon && (!isnegativepionnotkaon)))
+	  {
+	    pidD0bar = 1; // accept D0bar
+	  }
 
-      if (pidTrackNegPion == TrackSelectorPID::Status::PIDAccepted &&
-          pidTrackPosKaon == TrackSelectorPID::Status::PIDAccepted) {
-        pidD0bar = 1; // accept D0bar
-      } else if (pidTrackPosPion == TrackSelectorPID::Status::PIDAccepted ||
-                 pidTrackNegKaon == TrackSelectorPID::Status::PIDAccepted ||
-                 pidTrackNegPion == TrackSelectorPID::Status::PIDRejected ||
-                 pidTrackPosKaon == TrackSelectorPID::Status::PIDRejected) {
-        pidD0bar = 0; // exclude D0bar
-      }
-
-      if (pidD0 == 0 && pidD0bar == 0) {
-        hfSelD0Candidate(statusD0, statusD0bar);
-        continue;
-      }
-
-      if ((pidD0 == -1 || pidD0 == 1) && topolD0) {
-        statusD0 = 1; // identified as D0
-      }
-      if ((pidD0bar == -1 || pidD0bar == 1) && topolD0bar) {
-        statusD0bar = 1; // identified as D0bar
-      }
-
-      hfSelD0Candidate(statusD0, statusD0bar);
+	///////////////////step3: assigning status to D0////////////////
+	if (pidD0 == -1 && pidD0bar == -1)
+	  {
+	    hfSelD0Candidate(statusD0, statusD0bar);
+	    continue;
+	  }
+	if(pidD0==1 && topolD0)statusD0 = 1;
+	if(pidD0bar==1 && topolD0bar)statusD0bar = 1;
+	hfSelD0Candidate(statusD0, statusD0bar);
     }
   }
 };
 
 WorkflowSpec defineDataProcessing(ConfigContext const& cfgc)
 {
-  return WorkflowSpec{
-    adaptAnalysisTask<HFD0CandidateSelector>(cfgc, TaskName{"hf-d0-candidate-selector"})};
+  WorkflowSpec workflow{};
+  workflow.push_back(adaptAnalysisTask<Alice3PidIndexBuilder>(cfgc));
+  workflow.push_back(adaptAnalysisTask<HFD0CandidateSelector>(cfgc, TaskName{"hf-d0-candidate-selector"}));
+  return workflow;
 }
