@@ -22,13 +22,12 @@
 #include "AnalysisCore/TrackSelectorPID.h"
 #include "ALICE3Analysis/RICH.h"
 #include "Framework/runDataProcessing.h"
+#include "AnalysisDataModel/PID/PIDResponse.h"
 
 using namespace o2;
 using namespace o2::framework;
 using namespace o2::aod::hf_cand_prong2;
 using namespace o2::analysis::hf_cuts_d0_topik;
-
-
 
 
 namespace o2::aod
@@ -52,13 +51,10 @@ struct Alice3PidIndexBuilder {
 
 
 
-
-
-
 /// Struct for applying D0 selection cuts
 struct HFD0CandidateSelector {
   Produces<aod::HFSelD0Candidate> hfSelD0Candidate;
-
+  Configurable<int> d_usedetector{"d_usedetector", 0, "Use of PID detector"};
   Configurable<double> d_pTCandMin{"d_pTCandMin", 0., "Lower bound of candidate pT"};
   Configurable<double> d_pTCandMax{"d_pTCandMax", 50., "Upper bound of candidate pT"};
   // TPC
@@ -136,16 +132,22 @@ struct HFD0CandidateSelector {
 
     // decay exponentail law, with tau = beta*gamma*ctau
     // decay length > ctau retains (1-1/e)
-    if (std::abs(candidate.impactParameterNormalised0()) < 0.5 || std::abs(candidate.impactParameterNormalised1()) < 0.5) {
+
+    if (std::abs(candidate.impactParameterNormalised0()) < 0.5 || std::abs(candidate.impactParameterNormalised1()) < 0.5)
+      {
       return false;
-    }
+      }
+    
     double decayLengthCut = std::min((candidate.p() * 0.0066) + 0.01, 0.06);
-    if (candidate.decayLength() * candidate.decayLength() < decayLengthCut * decayLengthCut) {
-      return false;
-    }
-    if (candidate.decayLengthNormalised() * candidate.decayLengthNormalised() < 1.0) {
-      //return false; // add back when getter fixed
-    }
+    if (candidate.decayLength() * candidate.decayLength() < decayLengthCut * decayLengthCut)
+      {
+	return false;
+      }
+    
+    if (candidate.decayLengthNormalised() * candidate.decayLengthNormalised() < 1.0)
+      {
+	//return false; // add back when getter fixed
+      }
     return true;
   }
 
@@ -166,41 +168,58 @@ struct HFD0CandidateSelector {
     }
 
     // invariant-mass cut
-    if (trackPion.sign() > 0) {
-      if (std::abs(InvMassD0(candidate) - RecoDecay::getMassPDG(pdg::Code::kD0)) > cuts->get(pTBin, "m")) {
+    if (trackPion.sign() > 0)
+      {
+	if (std::abs(InvMassD0(candidate) - RecoDecay::getMassPDG(pdg::Code::kD0)) > cuts->get(pTBin, "m"))
+	  {
         return false;
+	  }
       }
-    } else {
-      if (std::abs(InvMassD0bar(candidate) - RecoDecay::getMassPDG(pdg::Code::kD0)) > cuts->get(pTBin, "m")) {
-        return false;
+    else
+      {
+	if (std::abs(InvMassD0bar(candidate) - RecoDecay::getMassPDG(pdg::Code::kD0)) > cuts->get(pTBin, "m")) {
+	  return false;
+	}
       }
-    }
 
     // cut on daughter pT
-    if (trackPion.pt() < cuts->get(pTBin, "pT Pi") || trackKaon.pt() < cuts->get(pTBin, "pT K")) {
-      return false;
-    }
+    if (trackPion.pt() < cuts->get(pTBin, "pT Pi") || trackKaon.pt() < cuts->get(pTBin, "pT K"))
+      {
+	return false;
+      }
+
+    // eta cut on daughter
+    if (std::abs(trackPion.eta()) > 1.44 || std::abs(trackKaon.eta()) > 1.44)
+      {
+	return false;
+      }
 
     // cut on daughter DCA - need to add secondary vertex constraint here
-    if (std::abs(trackPion.dcaPrim0()) > cuts->get(pTBin, "d0pi") || std::abs(trackKaon.dcaPrim0()) > cuts->get(pTBin, "d0K")) {
-      return false;
-    }
+    if (std::abs(trackPion.dcaPrim0()) > cuts->get(pTBin, "d0pi") || std::abs(trackKaon.dcaPrim0()) > cuts->get(pTBin, "d0K"))
+      {
+	return false;
+      }
 
     // cut on cos(theta*)
-    if (trackPion.sign() > 0) {
-      if (std::abs(CosThetaStarD0(candidate)) > cuts->get(pTBin, "cos theta*")) {
-        return false;
+    if (trackPion.sign() > 0)
+      {
+	if (std::abs(CosThetaStarD0(candidate)) > cuts->get(pTBin, "cos theta*")) {
+	  return false;
+	}
       }
-    } else {
-      if (std::abs(CosThetaStarD0bar(candidate)) > cuts->get(pTBin, "cos theta*")) {
-        return false;
+    else
+      {
+	if (std::abs(CosThetaStarD0bar(candidate)) > cuts->get(pTBin, "cos theta*"))
+	  {
+	    return false;
+	  }
       }
-    }
 
     return true;
   }
 
-  
+  //  using TracksPID = soa::Join<aod::Tracks, aod::TracksExtra, aod::TracksExtended, aod::pidTOFFullel, aod::pidTOFFullPi, aod::pidTOFFullKa,aod::HfTrackIndexALICE3PID>;
+  //  using TracksPID = soa::Join<aod::BigTracksPID, aod::pidTOFFullPi, aod::pidTOFFullKa,aod::HfTrackIndexALICE3PID>;
   using TracksPID = soa::Join<aod::BigTracksPID, aod::HfTrackIndexALICE3PID>;
   void process(aod::HfCandProng2 const& candidates, TracksPID const&, aod::RICHs const&)
   {
@@ -224,82 +243,76 @@ struct HFD0CandidateSelector {
       {
 	int statusD0 = 0;
 	int statusD0bar = 0;
-
+	int statusHFFlag = 0;
+	int statusTopol = 0;
+	int statusCand = 0;
+	/*	float nsigmapiontof = -500.0;
+	float nsigmakaontof = -500.0;
+	float nsigmapionrich = -500.0;
+	float nsigmakaonrich = -500.0;
+	*/
+	int pidD0 = -1;
+	int pidD0bar = -1;
+	
 	if (!(candidate.hfflag() & 1 << DecayType::D0ToPiK))
 	  {
-	    hfSelD0Candidate(statusD0, statusD0bar);
+	    hfSelD0Candidate(statusD0, statusD0bar, statusHFFlag, statusTopol, statusCand);
+	    //hfSelD0Candidate(statusD0, statusD0bar);
 	    continue;
 	  }
-	
+	statusHFFlag=1;
 	auto trackPos = candidate.index0_as<TracksPID>(); // positive daughter
 	auto trackNeg = candidate.index1_as<TracksPID>(); // negative daughter
-
+	//std::out<<trackPos.tofNSigmaPi()<<"\n";
 	// conjugate-independent topological selection
 	if (!selectionTopol(candidate))
 	  {
-	    hfSelD0Candidate(statusD0, statusD0bar);
+	    hfSelD0Candidate(statusD0, statusD0bar, statusHFFlag, statusTopol, statusCand);	   
+	    //hfSelD0Candidate(statusD0, statusD0bar);
 	    continue;
 	}
-	
+	statusTopol = 1;
       // conjugate-dependent topological selection for D0
 	bool topolD0 = selectionTopolConjugate(candidate, trackPos, trackNeg);
 	bool topolD0bar = selectionTopolConjugate(candidate, trackNeg, trackPos);
 	
 	if (!topolD0 && !topolD0bar)
 	  {
-	    hfSelD0Candidate(statusD0, statusD0bar);
+	    hfSelD0Candidate(statusD0, statusD0bar, statusHFFlag, statusTopol, statusCand);	    
+	    //hfSelD0Candidate(statusD0, statusD0bar);
 	    continue;
 	  }
-
-  
-
-	//////////////////////TrackID checking////////////////////////
-	////////step1: check track is pion not electron//////////////////////////
-	if (selectorPion.isElectronAndNotPion(trackPos) || selectorPion.isElectronAndNotPion(trackNeg))
-	{
-	  hfSelD0Candidate(statusD0, statusD0bar);
-	  continue;
-	}
-
-	////////step2: pion kaon selection and D0 selection//////////////////////////
-	// track-level TOF PID selection
-	int pidTrackPosKaonTOF = selectorKaon.getStatusTrackPIDTOF(trackPos);
-	int pidTrackPosPionTOF = selectorPion.getStatusTrackPIDTOF(trackPos);
-	int pidTrackNegKaonTOF = selectorKaon.getStatusTrackPIDTOF(trackNeg);
-	int pidTrackNegPionTOF = selectorPion.getStatusTrackPIDTOF(trackNeg);
+	statusCand=1;
 	
-	// track-level RICH PID selection
-	int pidTrackPosKaonRICH = selectorKaon.getStatusTrackPIDRICH(trackPos);
-	int pidTrackPosPionRICH = selectorPion.getStatusTrackPIDRICH(trackPos);
-	int pidTrackNegKaonRICH = selectorKaon.getStatusTrackPIDRICH(trackNeg);
-	int pidTrackNegPionRICH = selectorPion.getStatusTrackPIDRICH(trackNeg);
-	bool ispositivepionnotkaon=selectorKaon.isPionAndNotKaon(trackPos);
-	bool isnegativepionnotkaon=selectorKaon.isPionAndNotKaon(trackNeg);
-      
-	int pidD0 = -1;
-	int pidD0bar = -1;
-
-	///////////check positive track pion not kaon as well as negetive track kaon//////////////////////
-	if ((pidTrackPosPionTOF == TrackSelectorPID::Status::PIDAccepted && pidTrackNegKaonTOF == TrackSelectorPID::Status::PIDAccepted && ispositivepionnotkaon && (!isnegativepionnotkaon))||(pidTrackPosPionRICH == TrackSelectorPID::Status::PIDAccepted && pidTrackNegKaonRICH == TrackSelectorPID::Status::PIDAccepted && ispositivepionnotkaon && (!isnegativepionnotkaon)))
+	if(selectorPion.isPion(trackPos,d_usedetector) && selectorKaon.isKaon(trackNeg,d_usedetector))
 	  {
-	    pidD0 = 1; // accept D0
+	    pidD0 = 1;
 	  }
-	///////////check negative track pion not kaon as well as positive track kaon//////////////////////
-	if ((pidTrackNegPionTOF == TrackSelectorPID::Status::PIDAccepted && pidTrackPosKaonTOF == TrackSelectorPID::Status::PIDAccepted && isnegativepionnotkaon && (!ispositivepionnotkaon))||(pidTrackNegPionRICH == TrackSelectorPID::Status::PIDAccepted && pidTrackPosKaonRICH == TrackSelectorPID::Status::PIDAccepted && isnegativepionnotkaon && (!isnegativepionnotkaon)))
+	if(selectorPion.isPion(trackNeg,d_usedetector) && selectorKaon.isKaon(trackPos,d_usedetector))
 	  {
-	    pidD0bar = 1; // accept D0bar
+	    pidD0bar = 1;
 	  }
-
-	///////////////////step3: assigning status to D0////////////////
 	if (pidD0 == -1 && pidD0bar == -1)
 	  {
-	    hfSelD0Candidate(statusD0, statusD0bar);
+	    hfSelD0Candidate(statusD0, statusD0bar, statusHFFlag, statusTopol, statusCand);	 
+	    //hfSelD0Candidate(statusD0, statusD0bar);
 	    continue;
 	  }
 	if(pidD0==1 && topolD0)statusD0 = 1;
 	if(pidD0bar==1 && topolD0bar)statusD0bar = 1;
-	hfSelD0Candidate(statusD0, statusD0bar);
-    }
+	/*if(statusD0==1)
+	  {
+	    bool hasRICHP = trackPos.richId() > -1;
+	    bool hasRICHN = trackNeg.richId() > -1;
+	    
+	    nsigmapiontof = trackPos.tofNSigmaPi();
+	    nsigmakaontof = trackNeg.tofNSigmaKa();
+	    nsigmapionrich = hasRICHP ? trackPos.rich().richNsigmaPi() : -1000.;
+	    nsigmakaonrich = hasRICHN ? trackNeg.rich().richNsigmaKa() : -1000.;
+	    }*/
+	hfSelD0Candidate(statusD0, statusD0bar, statusHFFlag, statusTopol, statusCand);
+
+      }
   }
 };
 

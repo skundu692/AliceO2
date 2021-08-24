@@ -111,58 +111,226 @@ struct TaskD0 {
 struct TaskD0MC {
   HistogramRegistry registry{
     "registry",
-    {{"hPtRecSig", "2-prong candidates (matched);#it{p}_{T}^{rec.} (GeV/#it{c});entries", {HistType::kTH1F, {{100, 0., 10.}}}},
-     {"hPtRecSigPrompt", "2-prong candidates (matched, prompt);#it{p}_{T}^{rec.} (GeV/#it{c});entries", {HistType::kTH1F, {{100, 0., 10.}}}},
-     {"hPtRecSigNonPrompt", "2-prong candidates (matched, non-prompt);#it{p}_{T}^{rec.} (GeV/#it{c});entries", {HistType::kTH1F, {{100, 0., 10.}}}},
-     {"hPtRecBg", "2-prong candidates (unmatched);#it{p}_{T}^{rec.} (GeV/#it{c});entries", {HistType::kTH1F, {{100, 0., 10.}}}},
-     {"hPtGen", "MC particles (matched);#it{p}_{T}^{gen.} (GeV/#it{c});entries", {HistType::kTH1F, {{100, 0., 10.}}}},
-     {"hPtGenPrompt", "MC particles (matched, prompt);#it{p}_{T}^{gen.} (GeV/#it{c});entries", {HistType::kTH1F, {{100, 0., 10.}}}},
-     {"hPtGenNonPrompt", "MC particles (matched, non-prompt);#it{p}_{T}^{gen.} (GeV/#it{c});entries", {HistType::kTH1F, {{100, 0., 10.}}}},
-     {"hPtGenSig", "2-prong candidates (matched);#it{p}_{T}^{gen.} (GeV/#it{c});entries", {HistType::kTH1F, {{100, 0., 10.}}}},
+    {{"hrecostatus", "2-prong candidates status", {HistType::kTH1F, {{5, -0.5, 4.5}}}},
+     {"hPtRecSig", "2-prong candidates (matched);#it{p}_{T}^{rec.} (GeV/#it{c});entries", {HistType::kTH1F, {{500, 0., 50.}}}},
+     {"hPtRecSigPrompt", "2-prong candidates (matched, prompt);#it{p}_{T}^{rec.} (GeV/#it{c});entries", {HistType::kTH1F, {{500, 0., 50.}}}},
+     {"hPtRecSigNonPrompt", "2-prong candidates (matched, non-prompt);#it{p}_{T}^{rec.} (GeV/#it{c});entries", {HistType::kTH1F, {{500, 0., 50.}}}},
+     {"hPtRecBg", "2-prong candidates (unmatched);#it{p}_{T}^{rec.} (GeV/#it{c});entries", {HistType::kTH1F, {{500, 0., 50.}}}},
+     {"hPtGen", "MC particles (matched);#it{p}_{T}^{gen.} (GeV/#it{c});entries", {HistType::kTH1F, {{500, 0., 50.}}}},
+     {"hPtGenPrompt", "MC particles (matched, prompt);#it{p}_{T}^{gen.} (GeV/#it{c});entries", {HistType::kTH1F, {{500, 0., 50.}}}},
+     {"hPtGenNonPrompt", "MC particles (matched, non-prompt);#it{p}_{T}^{gen.} (GeV/#it{c});entries", {HistType::kTH1F, {{500, 0., 50.}}}},
+     {"hPtGenSig", "2-prong candidates (matched);#it{p}_{T}^{gen.} (GeV/#it{c});entries", {HistType::kTH1F, {{500, 0., 50.}}}},
      {"hCPARecSig", "2-prong candidates (matched);cosine of pointing angle;entries", {HistType::kTH1F, {{110, -1.1, 1.1}}}},
      {"hCPARecBg", "2-prong candidates (unmatched);cosine of pointing angle;entries", {HistType::kTH1F, {{110, -1.1, 1.1}}}},
      {"hEtaRecSig", "2-prong candidates (matched);#it{#eta};entries", {HistType::kTH1F, {{100, -2., 2.}}}},
      {"hEtaRecBg", "2-prong candidates (unmatched);#it{#eta};entries", {HistType::kTH1F, {{100, -2., 2.}}}},
-     {"hEtaGen", "MC particles (matched);#it{#eta};entries", {HistType::kTH1F, {{100, -2., 2.}}}}}};
+     {"hEtaGen", "MC particles (matched);#it{#eta};entries", {HistType::kTH1F, {{100, -2., 2.}}}},
+     {"hPtvsYRecSig_RecoPID", "2-prong candidates (RecoPID - matched);#it{p}_{T}^{rec.}; #it{y}", {HistType::kTH2F, {{500, 0., 50.}, {100, -2., 2.}}}},
+     {"hPtvsYRecSigPrompt_RecoPID", "2-prong candidates (RecoPID - matched, prompt);#it{p}_{T}^{rec.}; #it{y}", {HistType::kTH2F, {{500, 0., 50.}, {100, -2., 2.}}}},
+     {"hPtvsYRecSigNonPrompt_RecoPID", "2-prong candidates (RecoPID - matched, non-prompt);#it{p}_{T}^{rec.}; #it{y}", {HistType::kTH2F, {{500, 0., 50.}, {100, -2., 2.}}}},
+     {"hPtvsYRecSig_RecoCand", "2-prong candidates (RecoCand - matched);#it{p}_{T}^{rec.}; #it{y}", {HistType::kTH2F, {{500, 0., 50.}, {100, -2., 2.}}}},
+     {"hPtvsYRecSigPrompt_RecoCand", "2-prong candidates (RecoCand - matched, prompt);#it{p}_{T}^{rec.}; #it{y}", {HistType::kTH2F, {{500, 0., 50.}, {100, -2., 2.}}}},
+     {"hPtvsYRecSigNonPrompt_RecoCand", "2-prong candidates (RecoCand - matched, non-prompt);#it{p}_{T}^{rec.}; #it{y}", {HistType::kTH2F, {{500, 0., 50.}, {100, -2., 2.}}}},
+     {"hPtvsYRecSig_RecoTopol", "2-prong candidates (RecoTopol - matched);#it{p}_{T}^{rec.}; #it{y}", {HistType::kTH2F, {{500, 0., 50.}, {100, -2., 2.}}}},
+     {"hPtvsYRecSigPrompt_RecoTopol", "2-prong candidates (RecoTopol - matched, prompt);#it{p}_{T}^{rec.}; #it{y}", {HistType::kTH2F, {{500, 0., 50.}, {100, -2., 2.}}}},
+     {"hPtvsYRecSigNonPrompt_RecoTopol", "2-prong candidates (RecoTopol - matched, non-prompt);#it{p}_{T}^{rec.}; #it{y}", {HistType::kTH2F, {{500, 0., 50.}, {100, -2., 2.}}}},
+     {"hPtvsYRecSig_RecoHFFlag", "2-prong candidates (RecoHFFlag - matched);#it{p}_{T}^{rec.}; #it{y}", {HistType::kTH2F, {{500, 0., 50.}, {100, -2., 2.}}}},
+     {"hPtvsYRecSigPrompt_RecoHFFlag", "2-prong candidates (RecoHFFlag - matched, prompt);#it{p}_{T}^{rec.}; #it{y}", {HistType::kTH2F, {{500, 0., 50.}, {100, -2., 2.}}}},
+     {"hPtvsYRecSigNonPrompt_RecoHFFlag", "2-prong candidates (RecoHFFlag - matched, non-prompt);#it{p}_{T}^{rec.}; #it{y}", {HistType::kTH2F, {{500, 0., 50.}, {100, -2., 2.}}}},
+     {"hPtvsYGen", "2-prong candidates (matched);#it{p}_{T}^{gen.}; #it{y}", {HistType::kTH2F, {{500, 0., 50.}, {100, -2., 2.}}}},
+     {"hPtvsYGenPrompt", "2-prong candidates (matched, prompt);#it{p}_{T}^{gen.}; #it{y}", {HistType::kTH2F, {{500, 0., 50.}, {100, -2., 2.}}}},
+     {"hPtvsYGenNonPrompt", "2-prong candidates (matched, non-prompt);#it{p}_{T}^{gen.}; #it{y}", {HistType::kTH2F, {{500, 0., 50.}, {100, -2., 2.}}}},
+     /*
+     {"hnsigmatofpion", "TOF pion;n#sigma; #it{p}_{T}", {HistType::kTH2F, {{100, -5.0, 5.0}, {500, 0., 50.}}}},
+     {"hnsigmatofkaon", "TOF kaon;n#sigma; #it{p}_{T}", {HistType::kTH2F, {{100, -5.0, 5.0}, {500, 0., 50.}}}},
 
+     {"hnsigmarichpion", "RICH pion;n#sigma; #it{p}_{T}", {HistType::kTH2F, {{100, -5.0, 5.0}, {500, 0., 50.}}}},
+     {"hnsigmarichkaon", "RICH kaon;n#sigma; #it{p}_{T}", {HistType::kTH2F, {{100, -5.0, 5.0}, {500, 0., 50.}}}},
+     */
+     {"hInvMassvsPtSIGD0_cand", "2-prong candidates_sig (topol);#it{m}_{inv}^{rec.}; #it{p}_{T}", {HistType::kTH2F, {{120, 1.5848, 2.1848}, {500, 0., 50.}}}},
+     {"hInvMassvsPtBKGD0_cand", "2-prong candidates_bkg (topol);#it{m}_{inv}^{rec.}; #it{p}_{T}", {HistType::kTH2F, {{120, 1.5848, 2.1848}, {500, 0., 50.}}}},
+     
+     {"hInvMassvsPtD0_RecoPIDMatch", "2-prong candidates (RecoD0PID - MC index matched);#it{m}_{inv}^{rec.}; #it{p}_{T}", {HistType::kTH2F, {{120, 1.5848, 2.1848}, {500, 0., 50.}}}},
+     {"hInvMassvsPtD0bar_RecoPIDMatch", "2-prong candidates (RecoD0barPID - MC index matched);#it{m}_{inv}^{rec.}; #it{p}_{T}", {HistType::kTH2F, {{120, 1.5848, 2.1848}, {500, 0., 50.}}}},
+
+     {"hInvMassvsPtBKGD0_RecoPIDMatch", "2-prong candidates (RecoBKGD0PID - MC index matched);#it{m}_{inv}^{rec.}; #it{p}_{T}", {HistType::kTH2F, {{120, 1.5848, 2.1848}, {500, 0., 50.}}}},
+     {"hInvMassvsPtBKGD0bar_RecoPIDMatch", "2-prong candidates (RecoBKGD0barPID - MC index matched);#it{m}_{inv}^{rec.}; #it{p}_{T}", {HistType::kTH2F, {{120, 1.5848, 2.1848}, {500, 0., 50.}}}},
+
+     {"hInvMassvsPtD0refl_RecoPID", "2-prong candidates (RecoD0reflPID - MC index matched);#it{m}_{inv}^{rec.}; #it{p}_{T}", {HistType::kTH2F, {{120, 1.5848, 2.1848}, {500, 0., 50.}}}},
+     {"hInvMassvsPtD0barrefl_RecoPID", "2-prong candidates (RecoD0barreflPID - MC index matched);#it{m}_{inv}^{rec.}; #it{p}_{T}", {HistType::kTH2F, {{120, 1.5848, 2.1848}, {500, 0., 50.}}}},
+
+     {"hInvMassvsPtD0_RecoPID", "2-prong candidates (RecoD0PID - No MC index matched);#it{m}_{inv}^{rec.}; #it{p}_{T}", {HistType::kTH2F, {{120, 1.5848, 2.1848}, {500, 0., 50.}}}},
+     {"hInvMassvsPtD0bar_RecoPID", "2-prong candidates (RecoD0barPID - No MC index matched);#it{m}_{inv}^{rec.}; #it{p}_{T}", {HistType::kTH2F, {{120, 1.5848, 2.1848}, {500, 0., 50.}}}}}};
+
+  Configurable<int> d_selectionHFFlag{"d_selectionHFFlag", 1, "Selection Flag for HF flagged candidates"};
+  Configurable<int> d_selectionTopol{"d_selectionTopol", 1, "Selection Flag for topologically selected candidates"};
+  Configurable<int> d_selectionCand{"d_selectionCand", 1, "Selection Flag for conj. topol. selected candidates"};
   Configurable<int> d_selectionFlagD0{"d_selectionFlagD0", 1, "Selection Flag for D0"};
   Configurable<int> d_selectionFlagD0bar{"d_selectionFlagD0bar", 1, "Selection Flag for D0bar"};
   Configurable<double> cutYCandMax{"cutYCandMax", -1., "max. cand. rapidity"};
-
-  Filter filterSelectCandidates = (aod::hf_selcandidate_d0::isSelD0 >= d_selectionFlagD0 || aod::hf_selcandidate_d0::isSelD0bar >= d_selectionFlagD0bar);
-
+  
+  //  Filter filterSelectCandidates = (aod::hf_selcandidate_d0::isSelD0 >= d_selectionFlagD0 || aod::hf_selcandidate_d0::isSelD0bar >= d_selectionFlagD0bar);
+  Filter filterSelectCandidates = (aod::hf_selcandidate_d0::isSelHFFlag >= d_selectionHFFlag);
+  
   void process(soa::Filtered<soa::Join<aod::HfCandProng2, aod::HFSelD0Candidate, aod::HfCandProng2MCRec>> const& candidates,
                soa::Join<aod::McParticles, aod::HfCandProng2MCGen> const& particlesMC, aod::BigTracksMC const& tracks)
   {
     // MC rec.
     //Printf("MC Candidates: %d", candidates.size());
-    for (auto& candidate : candidates) {
-      if (!(candidate.hfflag() & 1 << DecayType::D0ToPiK)) {
+    for (auto& candidate : candidates)
+      {
+	auto indexMother = RecoDecay::getMother(particlesMC, candidate.index0_as<aod::BigTracksMC>().mcParticle_as<soa::Join<aod::McParticles, aod::HfCandProng2MCGen>>(), pdg::Code::kD0, true);
+	auto particleMother = particlesMC.iteratorAt(indexMother);
+	auto ptGenlevel=particleMother.pt();
+	auto yGenlevel = particleMother.y();  
+	auto ptRec = candidate.pt();
+
+
+	if (cutYCandMax >= 0. && std::abs(yGenlevel) > cutYCandMax)
+	{
         continue;
-      }
-      if (cutYCandMax >= 0. && std::abs(YD0(candidate)) > cutYCandMax) {
+	}
+      ////////////////Fill invmass for significance study////////////////////////
+
+
+      if (candidate.isSelD0() >= d_selectionFlagD0)
+	{
+	  registry.fill(HIST("hInvMassvsPtD0_RecoPID"), InvMassD0(candidate), candidate.pt());
+	}
+      if (candidate.isSelD0bar() >= d_selectionFlagD0bar)
+	{
+	  registry.fill(HIST("hInvMassvsPtD0bar_RecoPID"), InvMassD0bar(candidate), candidate.pt());
+	}
+      
+      if (candidate.isSelD0() >= d_selectionFlagD0 && (candidate.flagMCMatchRec() == (1 << DecayType::D0ToPiK)))
+	{
+	  registry.fill(HIST("hInvMassvsPtD0_RecoPIDMatch"), InvMassD0(candidate), candidate.pt());
+	  /*  registry.fill(HIST("hnsigmatofpion"), candidate.ispiontofnsigma(), candidate.pt());
+	  registry.fill(HIST("hnsigmatofkaon"), candidate.iskaontofnsigma(), candidate.pt());
+	  registry.fill(HIST("hnsigmarichpion"), candidate.ispionrichnsigma(), candidate.pt());
+	  registry.fill(HIST("hnsigmarichkaon"), candidate.iskaonrichnsigma(), candidate.pt());*/
+	}
+      if (candidate.isSelD0() >= d_selectionFlagD0 && (candidate.flagMCMatchRec() != (1 << DecayType::D0ToPiK)))
+	{
+	  registry.fill(HIST("hInvMassvsPtBKGD0_RecoPIDMatch"), InvMassD0(candidate), candidate.pt());
+	}
+      //////////////No PID///////////
+      if (candidate.isSelCand() >= d_selectionCand && (candidate.flagMCMatchRec() == (1 << DecayType::D0ToPiK)))
+	{
+	  registry.fill(HIST("hInvMassvsPtSIGD0_cand"), InvMassD0(candidate), candidate.pt());
+	}
+
+      if (candidate.isSelCand() >= d_selectionCand && (candidate.flagMCMatchRec() != (1 << DecayType::D0ToPiK)))
+	{
+	  registry.fill(HIST("hInvMassvsPtBKGD0_cand"), InvMassD0(candidate), candidate.pt());
+	}      
+      /////////////////
+      if (candidate.isSelD0() >= d_selectionFlagD0 && (candidate.flagMCMatchRec() == (-1 << DecayType::D0ToPiK)))
+	{
+	  registry.fill(HIST("hInvMassvsPtD0refl_RecoPID"), InvMassD0(candidate), candidate.pt());
+	}
+
+      
+      if (candidate.isSelD0bar() >= d_selectionFlagD0bar && (candidate.flagMCMatchRec() == (-1 << DecayType::D0ToPiK)))
+	{
+	  registry.fill(HIST("hInvMassvsPtD0bar_RecoPIDMatch"), InvMassD0bar(candidate), candidate.pt());
+	}
+      if (candidate.isSelD0bar() >= d_selectionFlagD0bar && (candidate.flagMCMatchRec() != (-1 << DecayType::D0ToPiK)))
+	{
+	  registry.fill(HIST("hInvMassvsPtBKGD0bar_RecoPIDMatch"), InvMassD0bar(candidate), candidate.pt());
+	}
+      if (candidate.isSelD0bar() >= d_selectionFlagD0bar && (candidate.flagMCMatchRec() == (1 << DecayType::D0ToPiK)))
+	{
+	  registry.fill(HIST("hInvMassvsPtD0barrefl_RecoPID"), InvMassD0bar(candidate), candidate.pt());
+	}
+      
+      /////////////////////////////////////////////////////////////////////////////
+	if (!(candidate.hfflag() & 1 << DecayType::D0ToPiK))
+	{
         continue;
-      }
-      if (std::abs(candidate.flagMCMatchRec()) == 1 << DecayType::D0ToPiK) {
+	}
+
+      if (std::abs(candidate.flagMCMatchRec()) == 1 << DecayType::D0ToPiK)
+	{
         // Get the corresponding MC particle.
-        auto indexMother = RecoDecay::getMother(particlesMC, candidate.index0_as<aod::BigTracksMC>().mcParticle_as<soa::Join<aod::McParticles, aod::HfCandProng2MCGen>>(), pdg::Code::kD0, true);
-        auto particleMother = particlesMC.iteratorAt(indexMother);
-        registry.fill(HIST("hPtGenSig"), particleMother.pt()); // gen. level pT
-        auto ptRec = candidate.pt();
-        registry.fill(HIST("hPtRecSig"), ptRec); // rec. level pT
-        if (candidate.originMCRec() == OriginType::Prompt) {
-          registry.fill(HIST("hPtRecSigPrompt"), ptRec); // rec. level pT, prompt
-        } else {
-          registry.fill(HIST("hPtRecSigNonPrompt"), ptRec); // rec. level pT, non-prompt
-        }
-        registry.fill(HIST("hCPARecSig"), candidate.cpa());
-        registry.fill(HIST("hEtaRecSig"), candidate.eta());
-      } else {
+
+
+
+	  registry.fill(HIST("hPtGenSig"), particleMother.pt()); // gen. level pT
+	  registry.fill(HIST("hPtRecSig"), ptRec); // rec. level pT
+
+	  if (candidate.isSelHFFlag() >= d_selectionHFFlag)
+	    {
+	      registry.fill(HIST("hPtvsYRecSig_RecoHFFlag"), ptGenlevel, yGenlevel);
+	    }
+	  if (candidate.isSelTopol() >= d_selectionTopol)
+	    {
+	      registry.fill(HIST("hPtvsYRecSig_RecoTopol"), ptGenlevel, yGenlevel);
+	    }
+	  if (candidate.isSelCand() >= d_selectionCand)
+	    {
+	      registry.fill(HIST("hPtvsYRecSig_RecoCand"), ptGenlevel, yGenlevel);
+	    }
+	  if (candidate.isSelD0() >= d_selectionFlagD0 || candidate.isSelD0bar() >= d_selectionFlagD0bar)
+	    {
+	      registry.fill(HIST("hPtvsYRecSig_RecoPID"), ptGenlevel, yGenlevel);
+	      registry.fill(HIST("hrecostatus"), candidate.isSelD0bar()+2.0*candidate.isSelD0());
+	    }
+	  
+	  
+	  if (candidate.originMCRec() == OriginType::Prompt)
+	    {
+	      registry.fill(HIST("hPtRecSigPrompt"), ptRec); // rec. level pT, prompt
+	      if (candidate.isSelHFFlag() >= d_selectionHFFlag)
+		{
+		  registry.fill(HIST("hPtvsYRecSigPrompt_RecoHFFlag"), ptGenlevel, yGenlevel);
+		}
+	      if (candidate.isSelTopol() >= d_selectionTopol)
+		{
+		  registry.fill(HIST("hPtvsYRecSigPrompt_RecoTopol"), ptGenlevel, yGenlevel);
+		}
+	      if (candidate.isSelCand() >= d_selectionCand)
+		{
+		  registry.fill(HIST("hPtvsYRecSigPrompt_RecoCand"), ptGenlevel, yGenlevel);
+		}
+	      if (candidate.isSelD0() >= d_selectionFlagD0 || candidate.isSelD0bar() >= d_selectionFlagD0bar)
+		{
+		  registry.fill(HIST("hPtvsYRecSigPrompt_RecoPID"), ptGenlevel, yGenlevel);
+		}
+	      
+	    }
+	  
+	  else
+	    {
+	      registry.fill(HIST("hPtRecSigNonPrompt"), ptRec); // rec. level pT, non-prompt
+	      if (candidate.isSelHFFlag() >= d_selectionHFFlag)
+		{
+		  registry.fill(HIST("hPtvsYRecSigNonPrompt_RecoHFFlag"), ptGenlevel, yGenlevel);
+		}
+	      if (candidate.isSelTopol() >= d_selectionTopol)
+		{
+		  registry.fill(HIST("hPtvsYRecSigNonPrompt_RecoTopol"), ptGenlevel, yGenlevel);
+		}
+	      if (candidate.isSelCand() >= d_selectionCand)
+		{
+		  registry.fill(HIST("hPtvsYRecSigNonPrompt_RecoCand"), ptGenlevel, yGenlevel);
+		}
+	      if (candidate.isSelD0() >= d_selectionFlagD0 || candidate.isSelD0bar() >= d_selectionFlagD0bar)
+		{
+		  registry.fill(HIST("hPtvsYRecSigNonPrompt_RecoPID"), ptGenlevel, yGenlevel);
+		  }
+	    }
+	  
+	  registry.fill(HIST("hCPARecSig"), candidate.cpa());
+	  registry.fill(HIST("hEtaRecSig"), candidate.eta());
+	}
+      else
+	{
         registry.fill(HIST("hPtRecBg"), candidate.pt());
         registry.fill(HIST("hCPARecBg"), candidate.cpa());
         registry.fill(HIST("hEtaRecBg"), candidate.eta());
+	}
       }
-    }
     // MC gen.
     //Printf("MC Particles: %d", particlesMC.size());
     for (auto& particle : particlesMC) {
@@ -171,12 +339,22 @@ struct TaskD0MC {
           continue;
         }
         auto ptGen = particle.pt();
+	auto yGen = particle.y();
         registry.fill(HIST("hPtGen"), ptGen);
-        if (particle.originMCGen() == OriginType::Prompt) {
-          registry.fill(HIST("hPtGenPrompt"), ptGen);
-        } else {
-          registry.fill(HIST("hPtGenNonPrompt"), ptGen);
-        }
+	registry.fill(HIST("hPtvsYGen"), ptGen, yGen);
+	
+	if (particle.originMCGen() == OriginType::Prompt)
+	  {
+	    registry.fill(HIST("hPtGenPrompt"), ptGen);
+	    registry.fill(HIST("hPtvsYGenPrompt"), ptGen, yGen);
+	  }
+
+	else
+	  {
+	    registry.fill(HIST("hPtGenNonPrompt"), ptGen);
+	    registry.fill(HIST("hPtvsYGenNonPrompt"), ptGen, yGen);
+	  }
+	
         registry.fill(HIST("hEtaGen"), particle.eta());
       }
     }
